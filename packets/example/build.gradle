@@ -1,0 +1,38 @@
+group 'com.kerpow.games.packets'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.7
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    compile 'com.google.protobuf:protobuf-java:2.6.1'
+    compile 'com.kerpow.games.packets:core:1.0-SNAPSHOT'
+    compile 'com.kerpow.games.packets:protobuf:1.0-SNAPSHOT'
+}
+/**
+ * example task for running protoc in gradle
+ */
+task buildProto(type: Exec) {
+    print 'Running protoc: '
+    List<String> args = new ArrayList<String>()
+    File protoc = new File(project.projectDir, 'protoc.exe');
+    File messages = new File(project.projectDir, 'messages');
+    args.add('"' + protoc.absolutePath + '"');
+    args.add('--proto_path="./messages"');
+    args.add('--java_out="src/main/java"');
+    FileTree tree = fileTree(messages.absolutePath)
+    tree.include '**/*.proto'
+    tree.each {File file ->
+        args.add('"messages/' + file.name + '"')
+    }
+    println Arrays.toString(args.toArray())
+    commandLine args.toArray()
+}

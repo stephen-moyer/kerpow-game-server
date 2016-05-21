@@ -1,0 +1,10 @@
+package com.kerpow.games.net.common;
+
+option java_package = "com.kerpow.games.packets.example";
+
+message ExamplePacket {
+
+  required string ex1 = 1;
+  required int32 ex2 = 2;
+
+}
