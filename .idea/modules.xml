@@ -2,6 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/packets/core.iml" filepath="$PROJECT_DIR$/packets/core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/packets/example/example.iml" filepath="$PROJECT_DIR$/packets/example/example.iml" />
+      <module fileurl="file://$PROJECT_DIR$/packets/protobuf/protobuf.iml" filepath="$PROJECT_DIR$/packets/protobuf/protobuf.iml" />
       <module fileurl="file://$PROJECT_DIR$/server.iml" filepath="$PROJECT_DIR$/server.iml" />
       <module fileurl="file://$PROJECT_DIR$/../com-kerpow-games-server-common/server.common.iml" filepath="$PROJECT_DIR$/../com-kerpow-games-server-common/server.common.iml" />
     </modules>
