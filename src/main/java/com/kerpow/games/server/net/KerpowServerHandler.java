@@ -1,16 +1,20 @@
 package com.kerpow.games.server.net;
 
+import com.kerpow.games.packets.exceptions.MessageHandlerException;
+import com.kerpow.games.packets.exceptions.MissingHandlerException;
 import com.kerpow.games.server.Server;
 import com.kerpow.games.packets.Packet;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class KerpowServerHandler extends SimpleChannelInboundHandler<Packet> {
 
-	private Server server;
+	private static Logger logger = Logger.getLogger("KerpowServerHandler");
 
-	private Channel lbChannel;
+	private final Server server;
 
 	public KerpowServerHandler(Server server) {
 		this.server = server;
@@ -28,6 +32,11 @@ public class KerpowServerHandler extends SimpleChannelInboundHandler<Packet> {
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext channelHandlerContext, Packet packet) throws Exception {
-		server.getPacketHandler().processPacket(channelHandlerContext.channel(), packet);
+		try {
+			server.getPacketProcessor().processPacket(channelHandlerContext.channel(), packet);
+		} catch (MissingHandlerException | MessageHandlerException e) {
+			logger.log(Level.SEVERE, e.getMessage());
+			e.printStackTrace();
+		}
 	}
 }

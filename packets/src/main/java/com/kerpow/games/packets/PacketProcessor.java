@@ -15,7 +15,7 @@ public class PacketProcessor {
 
     private final List<ListenerWrapper> listeners;
 
-    private PacketSenderTransformer senderTransformer;
+    private ProcessPipeline pipeline;
 
     public PacketProcessor(PacketDecoder decoder, PacketEncoder encoder) {
         this.listeners = new LinkedList<>();
@@ -44,9 +44,10 @@ public class PacketProcessor {
      */
     public void processPacket(Object sender, Packet packet) throws MissingHandlerException, MessageHandlerException {
         Object message = decodePacket(packet);
-        if (senderTransformer != null) {
+        if (pipeline != null) {
             //if the sender transformer returns null then its an invalid session
-            if ((sender = senderTransformer.checkAndGet(sender, packet)) == null) {
+            sender = pipeline.transformSender(sender, packet);
+            if (!pipeline.checkMessage(sender, packet, message)) {
                 return;
             }
         }
@@ -62,12 +63,11 @@ public class PacketProcessor {
     }
 
     /**
-     * Transforms the sender object into a new object.
-     * TODO probably want to implement some sort of pipeline like netty does?
-     * @param transformer the transformer
+     * Sets the pipeline for transforming or cancelling received packets
+     * @param pipeline the pipeline
      */
-    public void setSenderTransformer(PacketSenderTransformer transformer) {
-        this.senderTransformer = transformer;
+    public void setProcessPipeline(ProcessPipeline pipeline) {
+        this.pipeline = pipeline;
     }
 
     private class ListenerWrapper {
@@ -91,15 +91,24 @@ public class PacketProcessor {
     /**
      * WHAT SHOULD I NAME THIS :(
      */
-    public interface PacketSenderTransformer<TSender, TPacket extends Packet> {
+    public interface ProcessPipeline {
 
         /**
-         * Changes the sender to another type. In Netty we use this to map the Channel to an internal player instance
+         * Changes the sender to another type.
          * @param sender The sender
          * @param packet The packet, we check the packet id rather than go through and decode the packet
-         * @return null if you want the processor to discard the packet and not raise anything(we've used this for an invalid session), otherwise the mapped instance
+         * @return the transformed sender
          */
-        Object checkAndGet(TSender sender, TPacket packet);
+        Object transformSender(Object sender, Packet packet);
+
+        /**
+         * Checks the packet. This is called after transformSender
+         * @param sender The sender
+         * @param packet The packet
+         * @param message The decoded message
+         * @return false if you want to cancel raising the event
+         */
+        boolean checkMessage(Object sender, Packet packet, Object message);
 
     }
 

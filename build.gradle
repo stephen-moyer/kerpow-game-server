@@ -2,6 +2,7 @@ group 'com.kerpow.games'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
+apply plugin: 'idea'
 apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.8
@@ -14,6 +15,9 @@ repositories {
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.11'
     compile 'io.netty:netty-all:4.0.34.Final'
+    compile 'com.google.protobuf:protobuf-java:2.6.1'
+    compile 'com.kerpow.games.packets:core:1.0-SNAPSHOT'
+    compile 'com.kerpow.games.packets:protobuf:1.0-SNAPSHOT'
 }
 
 publishing {

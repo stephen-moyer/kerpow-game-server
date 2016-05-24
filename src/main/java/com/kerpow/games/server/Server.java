@@ -1,19 +1,29 @@
 package com.kerpow.games.server;
 
+import com.kerpow.games.packets.Packet;
 import com.kerpow.games.packets.PacketProcessor;
 import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 
-public abstract class Server<TInfo extends ServerInfo> {
+public abstract class Server<TInfo extends ServerInfo> implements PacketProcessor.ProcessPipeline {
 
     public static final AttributeKey<Player> PLAYER_ATTRIBUTE_KEY = AttributeKey.newInstance("Channel.player");
 
-    private final PacketProcessor packetHandler;
+    private final PacketProcessor packetProcessor;
     private final TInfo serverInfo;
 
-    public Server(TInfo serverInfo, PacketProcessor packetHandler) {
+    public Server(TInfo serverInfo, PacketProcessor packetProcessor) {
         this.serverInfo = serverInfo;
-        this.packetHandler = packetHandler;
+        this.packetProcessor = packetProcessor;
+        this.packetProcessor.setProcessPipeline(this);
+    }
+
+    public Object transformSender(Object sender, Packet packet) {
+        return ((Channel) sender).attr(PLAYER_ATTRIBUTE_KEY).get();
+    }
+
+    public boolean checkMessage(Object player, Packet packet, Object message) {
+        return player != null;
     }
 
     public final void onConnect(Channel channel) {
@@ -30,32 +40,36 @@ public abstract class Server<TInfo extends ServerInfo> {
         disconnected(player);
     }
 
-    public PacketProcessor getPacketHandler() {
-        return packetHandler;
+    public final PacketProcessor getPacketProcessor() {
+        return packetProcessor;
     }
 
-    public TInfo getServerInfo() {
+    public final TInfo getServerInfo() {
         return serverInfo;
     }
 
     /**
+     * Called when a player connects
+     * TODO move this out into some sort of PlayerHandler?
+     * @param player the player that connected
+     */
+    protected void connected(Player player) {
+    }
+
+    /**
+     * Called when a player disconnects
+     * TODO move this out into some sort of PlayerHandler?
+     * @param player the player that disconnected
+     */
+    protected void disconnected(Player player) {
+    }
+
+    /**
      * Creates a Player object to attach to this channel
+     * TODO move this out into some sort of PlayerHandler?
      * @param channel the netty channel
      * @return the created player
      */
-    public abstract Player createPlayer(Channel channel);
-
-    /**
-     * Notifies the implementation that a player connected
-     * @param player the player that connected
-     */
-    public abstract void connected(Player player);
-
-    /**
-     * Notifies the implementation that a player disconnected
-     * @param player the player that disconnected
-     */
-    public abstract void disconnected(Player player);
-
+    protected abstract Player createPlayer(Channel channel);
 
 }
