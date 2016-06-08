@@ -29,6 +29,10 @@ public abstract class Server<TInfo extends ServerInfo> implements PacketProcesso
         this.validators = new LinkedList<>();
     }
 
+    public void addValidator(Validator validator) {
+        validators.add(validator);
+    }
+
     public Object transformSender(Object sender, Packet packet) {
         return ((Channel) sender).attr(PLAYER_ATTRIBUTE_KEY).get();
     }
@@ -37,8 +41,10 @@ public abstract class Server<TInfo extends ServerInfo> implements PacketProcesso
         Player player = (Player) sender;
         if (serverInfo.validate) {
             Boolean validated = player.channel.attr(VALIDATED_ATTR_KEY).get();
+            System.out.println(validated);
             if (validated == null || !validated) {
                 //trigger validators
+                System.out.println("Trying validate");
                 tryValidate(player, packet, message);
                 return false;
             }
@@ -50,13 +56,16 @@ public abstract class Server<TInfo extends ServerInfo> implements PacketProcesso
         Player player = createPlayer(channel);
         channel.attr(PLAYER_ATTRIBUTE_KEY).set(player);
         if (serverInfo.validate) {
-            executorService.schedule(() -> {
+            System.out.println("Validating");
+            executorService.schedule(() -> {;
+                System.out.println("Checking if validated");
                 Boolean validated = player.channel.attr(VALIDATED_ATTR_KEY).get();
                 if (validated == null || !validated) {
                     player.channel.attr(Server.PLAYER_ATTRIBUTE_KEY).remove();
                     player.channel.close();
                 }
             }, serverInfo.validationTimeout, TimeUnit.MILLISECONDS);
+            System.out.println("Submitted");
         } else {
             connected(player);
         }
@@ -72,10 +81,10 @@ public abstract class Server<TInfo extends ServerInfo> implements PacketProcesso
 
     private void tryValidate(Player player, Packet packet, Object message) {
         for (Validator validator : validators) {
-            if (!validator.matches(packet.opcode)) {
+            if (!validator.matches(message.getClass())) {
                 continue;
             }
-            validator.validate(player, packet.opcode, message).thenAccept(validated -> {
+            validator.validate(player, message).thenAccept(validated -> {
                 if (!validated) {
                     return;
                 }
